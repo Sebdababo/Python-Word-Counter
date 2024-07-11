@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox, ttk
 import os
 import heapq
 import threading
+import queue
 
 class WordCounter:
     def __init__(self, file_path, case_sensitive, min_word_length, keep_hyphens, encoding, top_n):
@@ -124,6 +125,8 @@ class WordCounterGUI:
         self.word_counter = None
         self.results = None
         self.count_thread = None
+        self.update_queue = queue.Queue()
+        self.stop_event = threading.Event()
 
     def create_widgets(self):
         tk.Label(self.master, text="File:").grid(row=0, column=0, sticky='e')
@@ -164,8 +167,7 @@ class WordCounterGUI:
         self.file_path.set(filename)
 
     def update_progress(self, value):
-        self.progress.set(value)
-        self.master.update_idletasks()
+        self.update_queue.put(('progress', value))
 
     def start_count_words(self):
         file_path = self.file_path.get()
@@ -187,21 +189,45 @@ class WordCounterGUI:
         self.progress.set(0)
         self.result_text.delete('1.0', tk.END)
         
+        self.stop_event.clear()
         self.count_thread = threading.Thread(target=self.count_words_thread)
         self.count_thread.start()
+        
+        self.check_queue()
 
     def count_words_thread(self):
         try:
             self.word_counter.count_words(progress_callback=self.update_progress)
-            self.master.after(0, self.display_results)
+            if not self.stop_event.is_set():
+                self.update_queue.put(('finished', None))
         except Exception as e:
-            self.master.after(0, lambda: messagebox.showerror("Error", str(e)))
+            self.update_queue.put(('error', str(e)))
+
+    def check_queue(self):
+        try:
+            while True:
+                message, data = self.update_queue.get_nowait()
+                if message == 'progress':
+                    self.progress.set(data)
+                elif message == 'finished':
+                    self.display_results()
+                    self.reset_buttons()
+                elif message == 'error':
+                    messagebox.showerror("Error", data)
+                    self.reset_buttons()
+        except queue.Empty:
+            pass
         finally:
-            self.master.after(0, self.reset_buttons)
+            if not self.stop_event.is_set():
+                self.master.after(100, self.check_queue)
 
     def stop_count_words(self):
         if self.word_counter:
             self.word_counter.stop()
+        self.stop_event.set()
+        if self.count_thread:
+            self.count_thread.join()
+        self.reset_buttons()
 
     def reset_buttons(self):
         self.count_button.config(state=tk.NORMAL)
