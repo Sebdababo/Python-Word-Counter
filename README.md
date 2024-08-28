@@ -42,3 +42,7 @@ This Python program is a graphical user interface (GUI) application that allows 
 3. **Count Words:** Click the "Count Words" button to start the word counting process. The progress will be shown in the progress bar.
 4. **Stop Counting:** Click the "Stop" button to stop the word counting process.
 5. **Save Results:** Click the "Save Results" button to save the results to a text file.
+
+## Example Usage
+
+![word counter output](https://github.com/user-attachments/assets/03cfad38-d152-4710-9c4c-44b0a56d9fda)
