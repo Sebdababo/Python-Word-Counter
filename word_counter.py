@@ -61,7 +61,7 @@ class WordCounter:
     def count_words(self, progress_callback=None):
         file_size = os.path.getsize(self.file_path)
         bytes_read = 0
-        
+
         try:
             for chunk in self.read_file_in_chunks():
                 if self.stop_requested:
@@ -70,7 +70,7 @@ class WordCounter:
                 if progress_callback:
                     progress_callback(bytes_read / file_size * 100)
                 self.process_chunk(chunk)
-        
+
         except ValueError as e:
             raise e
         except Exception as e:
@@ -112,14 +112,14 @@ class WordCounterGUI:
     def __init__(self, master):
         self.master = master
         master.title("Word Frequency Counter")
-        
+
         self.file_path = tk.StringVar()
         self.case_sensitive = tk.BooleanVar()
         self.min_word_length = tk.IntVar(value=1)
         self.keep_hyphens = tk.BooleanVar(value=True)
         self.encoding = tk.StringVar(value='utf-8')
         self.top_n = tk.IntVar(value=10)
-        
+
         self.create_widgets()
 
         self.word_counter = None
@@ -132,30 +132,30 @@ class WordCounterGUI:
         tk.Label(self.master, text="File:").grid(row=0, column=0, sticky='e')
         tk.Entry(self.master, textvariable=self.file_path, width=50).grid(row=0, column=1)
         tk.Button(self.master, text="Browse", command=self.browse_file).grid(row=0, column=2)
-        
+
         tk.Checkbutton(self.master, text="Case Sensitive", variable=self.case_sensitive).grid(row=1, column=0, columnspan=2, sticky='w')
         tk.Checkbutton(self.master, text="Keep Hyphens", variable=self.keep_hyphens).grid(row=2, column=0, columnspan=2, sticky='w')
-        
+
         tk.Label(self.master, text="Min Word Length:").grid(row=3, column=0, sticky='e')
         tk.Entry(self.master, textvariable=self.min_word_length, width=5).grid(row=3, column=1, sticky='w')
-        
+
         tk.Label(self.master, text="Encoding:").grid(row=4, column=0, sticky='e')
         encodings = ['utf-8', 'ascii', 'iso-8859-1', 'utf-16']
         ttk.Combobox(self.master, textvariable=self.encoding, values=encodings).grid(row=4, column=1, sticky='w')
-        
+
         tk.Label(self.master, text="Top N Results:").grid(row=5, column=0, sticky='e')
         tk.Entry(self.master, textvariable=self.top_n, width=5).grid(row=5, column=1, sticky='w')
-        
+
         self.count_button = tk.Button(self.master, text="Count Words", command=self.start_count_words)
         self.count_button.grid(row=6, column=0)
         self.stop_button = tk.Button(self.master, text="Stop", command=self.stop_count_words, state=tk.DISABLED)
         self.stop_button.grid(row=6, column=1)
         tk.Button(self.master, text="Save Results", command=self.save_results).grid(row=6, column=2)
-        
+
         self.progress = tk.DoubleVar()
         self.progress_bar = ttk.Progressbar(self.master, variable=self.progress, maximum=100, length=300)
         self.progress_bar.grid(row=7, column=0, columnspan=3, pady=10)
-        
+
         self.result_text = tk.Text(self.master, height=20, width=50)
         self.result_text.grid(row=8, column=0, columnspan=3)
 
@@ -174,7 +174,7 @@ class WordCounterGUI:
         if not file_path:
             messagebox.showerror("Error", "Please select a file.")
             return
-        
+
         self.word_counter = WordCounter(
             file_path, 
             self.case_sensitive.get(),
@@ -183,16 +183,16 @@ class WordCounterGUI:
             self.encoding.get(),
             self.top_n.get()
         )
-        
+
         self.count_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.NORMAL)
         self.progress.set(0)
         self.result_text.delete('1.0', tk.END)
-        
+
         self.stop_event.clear()
         self.count_thread = threading.Thread(target=self.count_words_thread)
         self.count_thread.start()
-        
+
         self.check_queue()
 
     def count_words_thread(self):
@@ -235,19 +235,19 @@ class WordCounterGUI:
 
     def display_results(self):
         self.results, total_words = self.word_counter.get_results()
-        
+
         self.result_text.delete('1.0', tk.END)
         self.result_text.insert(tk.END, f"Total words: {total_words}\n\n")
         for word, count in self.results:
             self.result_text.insert(tk.END, f"{word}: {count}\n")
-        
+
         self.chart.plot(self.results[:10])
 
     def save_results(self):
         if not self.results:
             messagebox.showerror("Error", "No results to save. Please count words first.")
             return
-        
+
         file_path = filedialog.asksaveasfilename(defaultextension=".txt")
         if file_path:
             try:
@@ -259,6 +259,7 @@ class WordCounterGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save results: {str(e)}")
 
-root = tk.Tk()
-gui = WordCounterGUI(root)
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    gui = WordCounterGUI(root)
+    root.mainloop()
