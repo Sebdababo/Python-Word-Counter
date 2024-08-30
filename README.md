@@ -25,7 +25,12 @@ This Python program is a graphical user interface (GUI) application that allows 
    cd Python-Word-Counter
    ```
 
-2. **Run the Program:**
+2. **Install the required libraries:**
+    ```
+    pip install -r requirements.txt
+    ```
+
+3. **Run the Program:**
    ```
    python word_counter.py
    ```
